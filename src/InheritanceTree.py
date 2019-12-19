@@ -18,21 +18,31 @@ class InheritanceTree:
 
         lst = []
         pkg = base_dir.split(os.path.sep)[-1]
-
+        
+        #check if top level folder is module
+        try:
+            importlib.import_module(pkg)
+        except:
+            pkg = []
+            
         for item in os.walk(base_dir):
             dirname, folders, files = item
             if exclude and any(filter(lambda module: module in exclude, 
-                dirname.split(os.path.sep))):
+                                      dirname.split(os.path.sep))):
                 continue
             if specify and not any(filter(lambda module: module in specify, 
-                dirname.split(os.path.sep))):
+                                          dirname.split(os.path.sep))):
                 continue
+                
             for file in files:
                 if file.endswith('.py') and file != '__init__.py':
                     #import module.module...
-                    file = ('.').join([pkg] + dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
-                    print(file)
-                    lst.append(importlib.import_module(file))
+                    file = ('.').join(pkg + dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
+                    
+                    try:
+                        lst.append(importlib.import_module(file))
+                    except ModuleNotFoundError as e:
+                        print(e)
         return lst
 
 
@@ -100,4 +110,3 @@ class InheritanceTree:
 
         self.graph = g
         return g
-        
