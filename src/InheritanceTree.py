@@ -19,9 +19,15 @@ class InheritanceTree:
         lst = []
         for item in os.walk(base_dir):
             dirname, folders, files = item
+
             for file in files:
                 if file.endswith('.py') and file != '__init__.py':
-                    lst.append(importlib.import_module(file[:-3]))
+                    if dirname == loc:
+                        file = file[:-3]
+                    else:
+                        #import folder.module...
+                        file = ('.').join(dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
+                    lst.append(importlib.import_module(file))
         return lst
 
 
@@ -47,8 +53,8 @@ class InheritanceTree:
             This can be single module files or the top-most package folder.'''
         
         dct1 = {}
-        for mod in _import_all(base_dir):
-            dct2 = _create_dct(mod.__name__)
+        for mod in self._import_all(base_dir):
+            dct2 = self._create_dct(mod.__name__)
             dct1 = {**dct1, **dct2}
         self.tree = dct1
 
