@@ -37,7 +37,7 @@ class InheritanceTree:
             for file in files:
                 if file.endswith('.py') and file != '__init__.py':
                     #import module.module...
-                    file = ('.').join(pkg + dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
+                    file = ('.').join([pkg] + dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
                     
                     try:
                         lst.append(importlib.import_module(file))
