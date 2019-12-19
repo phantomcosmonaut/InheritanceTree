@@ -1,4 +1,5 @@
 import os, inspect, importlib
+from warnings import warn
 import graphviz as gv
 
 class InheritanceTree:
@@ -17,14 +18,15 @@ class InheritanceTree:
             Accepted format example for windows is "C:\\User\\Packages\\Package"'''
 
         lst = []
-        pkg = base_dir.split(os.path.sep)[-1]
-        
-        #check if top level folder is module
         try:
-            importlib.import_module(pkg)
-        except:
-            pkg = []
-            
+            os.chdir(base_dir)
+            importlib.import_module(base_dir.split(os.path.sep)[-1])
+            warn("Top level folder is already a package, this may cause conflicting imports.")
+        except FileNotFoundError as e:
+            raise e
+        except ModuleNotFoundError:
+            pass
+
         for item in os.walk(base_dir):
             dirname, folders, files = item
             if exclude and any(filter(lambda module: module in exclude, 
@@ -37,12 +39,12 @@ class InheritanceTree:
             for file in files:
                 if file.endswith('.py') and file != '__init__.py':
                     #import module.module...
-                    file = ('.').join([pkg] + dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
-                    
+                    file = ('.').join(dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
+                    print(file)
                     try:
                         lst.append(importlib.import_module(file))
                     except ModuleNotFoundError as e:
-                        print(e)
+                        warn(str(e))
         return lst
 
 
