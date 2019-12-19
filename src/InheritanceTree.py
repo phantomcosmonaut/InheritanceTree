@@ -9,7 +9,7 @@ class InheritanceTree:
         self.tree = {}
     
     @staticmethod
-    def _import_all(base_dir):
+    def _import_all(base_dir, exclude, specify):
         '''Creates an import list where modules can be identified and later scanned.
         Parameters:
         base_dir: str
@@ -17,16 +17,21 @@ class InheritanceTree:
             Accepted format example for windows is "C:\\User\\Packages\\Package"'''
 
         lst = []
+        pkg = base_dir.split(os.path.sep)[-1]
+
         for item in os.walk(base_dir):
             dirname, folders, files = item
-
+            if exclude and any(filter(lambda module: module in exclude, 
+                dirname.split(os.path.sep))):
+                continue
+            if specify and not any(filter(lambda module: module in specify, 
+                dirname.split(os.path.sep))):
+                continue
             for file in files:
                 if file.endswith('.py') and file != '__init__.py':
-                    if dirname == loc:
-                        file = file[:-3]
-                    else:
-                        #import folder.module...
-                        file = ('.').join(dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
+                    #import module.module...
+                    file = ('.').join([pkg] + dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
+                    print(file)
                     lst.append(importlib.import_module(file))
         return lst
 
@@ -45,15 +50,15 @@ class InheritanceTree:
         return dct
 
     
-    def create_tree(self, base_dir):
+    def create_tree(self, base_dir, exclude=None, specify=None):
         '''Combines dictionary module mappings to create a single dictionary.
         Parameters:
         base_dir: str
         The desired folder contents to be scanned. 
             This can be single module files or the top-most package folder.'''
-        
+            
         dct1 = {}
-        for mod in self._import_all(base_dir):
+        for mod in self._import_all(base_dir, exclude, specify):
             dct2 = self._create_dct(mod.__name__)
             dct1 = {**dct1, **dct2}
         self.tree = dct1
@@ -95,3 +100,4 @@ class InheritanceTree:
 
         self.graph = g
         return g
+        
