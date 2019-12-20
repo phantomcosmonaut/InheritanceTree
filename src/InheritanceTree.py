@@ -13,38 +13,51 @@ class InheritanceTree:
     def _import_all(base_dir, exclude, specify):
         '''Creates an import list where modules can be identified and later scanned.
         Parameters:
+        
         base_dir: str
         The file location for the package, folder, or module to be inspected.
-            Accepted format example for windows is "C:\\User\\Packages\\Package"'''
+            Accepted format example for windows is "C:\\User\\Packages\\Package"
+            
+        exclude: list
+        The list a modules to be excluded from the search
+        
+        specify: list
+        The list of modules to be specifically searched'''
 
         lst = []
         try:
+            #Try to find the base_dir, raise error if it doens't exist.
             os.chdir(base_dir)
-            importlib.import_module(base_dir.split(os.path.sep)[-1])
-            warn("Top level folder is already a package, this may cause conflicting imports.")
+            
+            #Test to see if top level folder is a package that can be imported.
+            pkg_name = base_dir.split(os.path.sep)[-1]
+            importlib.import_module(pkg_name)
+            
+            warn(f"The folder you selected '{pkg_name}', is already a package that has been installed, \
+this may cause conflicting imports.")
+            pkg = True
+            
         except FileNotFoundError as e:
             raise e
+            
         except ModuleNotFoundError:
-            pass
+            pkg = False
 
         for item in os.walk(base_dir):
             dirname, folders, files = item
-            if exclude and any(filter(lambda module: module in exclude, 
-                                      dirname.split(os.path.sep))):
+            if exclude and any(filter(lambda module: module in exclude, dirname.split(os.path.sep))):
                 continue
-            if specify and not any(filter(lambda module: module in specify, 
-                                          dirname.split(os.path.sep))):
+            if specify and not any(filter(lambda module: module in specify, dirname.split(os.path.sep))):
                 continue
-                
             for file in files:
                 if file.endswith('.py') and file != '__init__.py':
                     #import module.module...
-                    file = ('.').join(dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
-                    print(file)
-                    try:
-                        lst.append(importlib.import_module(file))
-                    except ModuleNotFoundError as e:
-                        warn(str(e))
+                    if pkg:
+                        file = ('.').join([pkg_name] + dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
+                    else:
+                        file = ('.').join(dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
+                    lst.append(importlib.import_module(file))
+
         return lst
 
 
@@ -52,6 +65,7 @@ class InheritanceTree:
     def _create_dct(module_name):
         '''Scans a module for classes and creates an mro dictionary for each class.
         Parameters:
+        
         module_name: str
         name of the module being isnpected for base classes.'''
 
@@ -65,9 +79,16 @@ class InheritanceTree:
     def create_tree(self, base_dir, exclude=None, specify=None):
         '''Combines dictionary module mappings to create a single dictionary.
         Parameters:
+        
         base_dir: str
         The desired folder contents to be scanned. 
-            This can be single module files or the top-most package folder.'''
+            This can be single module files or the top-most package folder
+            
+        exclude: list
+        The list a modules to be excluded from the search
+        
+        specify: list
+        The list of modules to be specifically searched'''
             
         dct1 = {}
         for mod in self._import_all(base_dir, exclude, specify):
