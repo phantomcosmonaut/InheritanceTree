@@ -1,6 +1,7 @@
 import os, inspect, importlib
 from warnings import warn
 import graphviz as gv
+import tabpy
 
 class InheritanceTree:
     '''Tree object designed to parse packages and modules for objects mros
@@ -28,20 +29,10 @@ class InheritanceTree:
         try:
             #Try to find the base_dir, raise error if it doens't exist.
             os.chdir(base_dir)
-            
-            #Test to see if top level folder is a package that can be imported.
             pkg_name = base_dir.split(os.path.sep)[-1]
-            importlib.import_module(pkg_name)
-            
-            warn(f"The folder you selected '{pkg_name}', is already a package that has been installed, \
-this may cause conflicting imports.")
-            pkg = True
             
         except FileNotFoundError as e:
             raise e
-            
-        except ModuleNotFoundError:
-            pkg = False
 
         for item in os.walk(base_dir):
             dirname, folders, files = item
@@ -52,10 +43,7 @@ this may cause conflicting imports.")
             for file in files:
                 if file.endswith('.py') and file != '__init__.py':
                     #import module.module...
-                    if pkg:
-                        file = ('.').join([pkg_name] + dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
-                    else:
-                        file = ('.').join(dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
+                    file = ('.').join(dirname[len(loc):].split(os.path.sep)[1:] + [file[:-3]])
                     lst.append(importlib.import_module(file))
 
         return lst
