@@ -1,7 +1,5 @@
 import os, inspect, importlib
-from warnings import warn
 import graphviz as gv
-import tabpy
 
 class InheritanceTree:
     '''Tree object designed to parse packages and modules for objects mros
